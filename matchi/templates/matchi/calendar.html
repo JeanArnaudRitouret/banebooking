@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar</title>
+    <link href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css' rel='stylesheet' />
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js'></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+        }
+        #slot-rules {
+            width: 30%;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-right: 20px;
+        }
+        #calendar {
+            width: 70%;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .fc-day-number {
+            padding: 10px;
+        }
+        .fc-event {
+            margin: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            height: auto;
+        }
+        .fc-title {
+            font-size: 0.7em !important;
+            white-space: normal;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="slot-rules">
+            <h2>Slot Rules</h2>
+            <div style="text-align: right; margin-bottom: 10px;">
+                <button id="add-rule">Add New Rule</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Week Days</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Sport</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule in slot_rules %}
+                    <tr>
+                        <td>{{ rule.week_days }}</td>
+                        <td>{{ rule.start_time }}</td>
+                        <td>{{ rule.end_time }}</td>
+                        <td>{{ rule.sport }}</td>
+                        <td><button class="delete-rule" data-id="{{ rule.id }}">Delete</button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div id="new-rule-modal" style="display:none;">
+            <h3>Create New Rule</h3>
+            <form id="new-rule-form">
+                <label for="week-days">Week Days:</label>
+                <input type="text" id="week-days" name="week_days" required><br>
+                <label for="start-time">Start Time:</label>
+                <input type="time" id="start-time" name="start_time" required><br>
+                <label for="end-time">End Time:</label>
+                <input type="time" id="end-time" name="end_time" required><br>
+                <label for="sport">Sport:</label>
+                <input type="text" id="sport" name="sport" required><br>
+                <button type="submit">Submit</button>
+                <button type="button" id="close-modal">Close</button>
+            </form>
+        </div>
+        <div id='calendar'></div>
+    </div>
+
+    <script>
+        var myEvents = JSON.parse('{{ events|escapejs }}');
+        $(document).ready(function() {
+            $('#calendar').fullCalendar({
+                header: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'month,agendaWeek,agendaDay'
+                },
+                defaultDate: moment().format('YYYY-MM-DD'),
+                editable: true,
+                displayEventTime: false,
+                events: myEvents,
+                eventRender: function(event, element) {
+                    // Set tooltip with field information
+                    element.attr('title', 'Field Info: ' + event.field_info);
+                    if (event.is_booked) {
+                        element.css('background-color', 'green');
+                    } else {
+                        element.css('background-color', 'rgba(128, 128, 128, 0.5)'); // Grey translucent
+                    }
+                }
+            });
+
+            $('#add-rule').click(function() {
+                $('#new-rule-modal').show(); // Show the modal
+            });
+
+            $('#close-modal').click(function() {
+                $('#new-rule-modal').hide(); // Hide the modal
+            });
+
+            $('#new-rule-form').submit(function(event) {
+                event.preventDefault(); // Prevent default form submission
+                // Here you would typically send the data to the server
+                // For example, using AJAX:
+                $.ajax({
+                    type: 'POST',
+                    url: '/matchi/api/create_slot_rule/',
+                    data: $(this).serialize(),
+                    success: function() {
+                        location.reload(); // Refresh the page on success
+                    }
+                });
+            });
+
+            $(document).on('click', '.delete-rule', function() {
+                var slotRuleId = $(this).data('id'); // Get the rule ID from the button's data attribute
+                // Send a request to delete the rule
+                $.ajax({
+                    type: 'DELETE',
+                    url: '/matchi/api/delete_slot_rule/' + slotRuleId + '/', // Adjust the URL as necessary
+                    success: function() {
+                        location.reload(); // Refresh the page on success
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
