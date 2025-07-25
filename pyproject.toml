@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "banebooking"
+version = "0.1.0"
+description = ""
+authors = ["JeanArnaudRitouret <86613080+JeanArnaudRitouret@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+django = "4.2.1"
+playwright = "1.41.1"
+pydantic = "^2.10.5"
+gunicorn = "^23.0.0"
+google-cloud-secret-manager = "^2.22.1"
+psycopg = "^3.2.4"
+psycopg2-binary = "^2.9.10"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.packages]]
+include = "banebooking"
+from = "."
+
+[[tool.poetry.packages]]
+include = "matchi"
+from = "."
